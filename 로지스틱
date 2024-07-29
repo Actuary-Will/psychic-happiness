@@ -1,0 +1,14 @@
+##로지스틱 회귀모형(연금선택률)
+
+rm(list=ls())
+gc()
+
+#V1 : 근속년수, V2 : 연금선택비율, V3 : 일시금선택비율
+
+retirement_Choice <- read.table(paste("C:/Users/박현우/Desktop/연금선택률/choice.txt",sep=""), header=FALSE, sep="\t") ##17-22년 간 퇴직자들의 실제 연금 및 일시금 선택비율
+
+Choice = cor(retirement_Choice$V1, retirement_Choice$V2)
+
+##산점도
+library(ggplot2)
+ggplot(
