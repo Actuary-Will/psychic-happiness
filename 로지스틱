@@ -5,10 +5,32 @@ gc()
 
 #V1 : 근속년수, V2 : 연금선택비율, V3 : 일시금선택비율
 
-retirement_Choice <- read.table(paste("C:/Users/박현우/Desktop/연금선택률/choice.txt",sep=""), header=FALSE, sep="\t") ##17-22년 간 퇴직자들의 실제 연금 및 일시금 선택비율
+retirement_choice <- read.table(paste("C:/Users/박현우/Desktop/연금선택률/choice.txt",sep=""), header=FALSE, sep="\t") ##17-22년 간 퇴직자들의 실제 연금 및 일시금 선택비율
 
-Choice = cor(retirement_Choice$V1, retirement_Choice$V2)
+choice = cor(retirement_choice$V1, retirement_choice$V2)
 
 ##산점도
 library(ggplot2)
-ggplot(
+ggplot(retirement_choice, aes(x = V1, y = V2)) + geom_point() + xlab("근속년수") + ylab("연금선택률") + theme(legend.position = "bottom") + theme_linedraw()
+
+##로지스틱 회귀
+nrow(retirement_choice)
+ncol(retirement_choice)
+head(retirement_choice)
+glm_retirement_choice <- glm(V2~V1, data = retirement_choice, family = binomial(link=logit))
+summary(glm_retirement_choice)
+
+step_vs <- step(glm_retirement_choice, direction = "backward")
+anova(glm_retirement_choice, test="chisq")
+
+predict_prob <- predict(step_vs, newdata=retirement_choice, type="response")
+predict_vs <- ifelse(predict_prob > 0.5, 1, 0)
+result <- data.frame(actual=retirement_choice$V2, predicted=predict_vs, pred_prob=predict_prob)
+print(result)
+
+ggplot(result, aes(x = 10:36, y = pred_prob)) + geom_line(linetype=1)
+write.table(result, "로지스틱 회귀분석 결과.txt", sep="\t", quote = FALSE, row,names = FALSE, fileEncoding="UTF-8")
+
+ggplot() + geom_point(data=retirement_choice, aes(x=10:36,y=V2)), geom_line(data=result, aes(x=10:36,y=pred_prob), color="blue") + lab(title="근속년수 별 연금선택률", x="근속년수", y="연금선택률") + theme(legend.position="bottom") + theme_linedraw()
+cor(retirement_choice$V1, predict_prob)
+anova(glm_retirement_choice)
