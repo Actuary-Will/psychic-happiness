@@ -1,0 +1,5 @@
+rm(list=ls())
+gc()
+Stime <- Sys.time()
+
+path <- "C:/Users/박현우/Desktop/lee-carter model/"
