@@ -3,3 +3,76 @@ gc()
 Stime <- Sys.time()
 
 path <- "C:/Users/박현우/Desktop/lee-carter model/"
+male_lx <- read.table(paste(path,"male_lx.txt",sep=""), header = FALSE, sep="\t")
+male_dx <- read.table(paste(path,"male_dx.txt",sep=""), header = FALSE, sep="\t")
+colnames(male_lx)=c(2000:2022)
+rownames(male_lx)=c(0:100)
+colnames(male_dx)=c(2000:2022)
+rownames(male_dx)=c(0:100)
+
+##Lee_carter Model
+
+ConstrLC=function(ax,bx,kt,b0x,gc,wxt,ages) {
+  c1=mean(kt[1,],na.rm=TRUE)
+  c2=mean(bx[,1],na.rm=TRUE)
+  list(ax+c1*bx,bx=bx/c2,kt=c2*(kt-c1))
+}
+
+library(devtools)
+library(StMoMo)
+LC=StMoMo(link="logit",staticAgeFun=TRUE, periodAgeFun="NP", constFun = ConstrLC)
+
+LC=lc(link="logit") ##Binomial distribution for the number of deaths
+
+##Example with data
+Dxt=male_dx ##Extract the number of deaths
+Ext=male_lx + 0.5*male_dx ##Initial Exposure
+Ages=EWMaleData$ages
+years=c(2000:2022)
+
+Ages.fit=0:100
+
+wxt=genWeightMat(ages = Ages.fit, years = years, clip = 3)
+
+length(Ages.fit)
+length(years)
+nrow(Dxt)
+length(Ages)
+nrow(Ext)
+
+##Fitting the lee_carter Model
+LCfit=fit(LC, Dxt=Dxt, Ext=Ext, ages=Ages, years=years, ages.fit=Ages.fit, wxt=wxt)
+summary(LCfit)
+
+LCfit$ax
+sum(LCfit$ax)
+
+LCfit$bx
+sum(LCfit$bx)
+
+LCfit$kt
+sum(LCfit$kt)
+
+plot(LCfit, nCol=3)
+
+LCres=residuals(LCfit)
+
+plot(LCres, type = "scatter", reslim=c(-3,5,3,5))
+
+##Forecasting
+LCfor=forecast(LCfit, h=80)
+LCfor$rates
+LCfor$kt.f
+
+write.table(LCfor[["rates"]],paste(path,"연도 별 예상 사망률.txt", sep=""),col.names = TRUE,row.names = FALSE,quote = FALSE, sep="\t", fileEncoding="UTF-8")
+
+
+
+
+
+
+
+
+
+
+
